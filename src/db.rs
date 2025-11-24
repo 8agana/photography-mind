@@ -1,9 +1,20 @@
 use crate::config::Config;
 use anyhow::Result;
-use surrealdb::{engine::remote::ws::{Client, Ws}, opt::auth::Root, Surreal};
+use surrealdb::{
+    Surreal,
+    engine::remote::ws::{Client, Ws},
+    opt::auth::Root,
+};
 
 pub async fn connect_db(cfg: &Config) -> Result<Surreal<Client>> {
-    let db = Surreal::new::<Ws>(&cfg.db_url).await?;
+    // Surreal expects host:port without scheme for Ws; strip ws:// or wss:// if present.
+    let addr = cfg
+        .db_url
+        .trim_start_matches("ws://")
+        .trim_start_matches("wss://")
+        .to_string();
+
+    let db = Surreal::new::<Ws>(&addr).await?;
     db.signin(Root {
         username: &cfg.db_user,
         password: &cfg.db_pass,
