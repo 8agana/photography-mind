@@ -26,6 +26,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tower = { version = "0.4", features = ["timeout"] }
 tower-http = { version = "0.5", features = ["cors"] }
+axum = "0.7"
 
 [features]
 default = []

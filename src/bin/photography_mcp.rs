@@ -1,5 +1,14 @@
+use axum::{Router as AxumRouter, routing::get};
 use photography_mind::{config::Config, router::Router, server::PhotoMindServer};
-use rmcp::{transport::stdio, ServiceExt};
+use rmcp::{
+    ServiceExt,
+    transport::stdio,
+    transport::streamable_http_server::{
+        StreamableHttpServerConfig, StreamableHttpService, session::local::LocalSessionManager,
+    },
+};
+use std::net::SocketAddr;
+use tokio::signal;
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
@@ -12,10 +21,33 @@ async fn main() -> anyhow::Result<()> {
 
     let cfg = Config::load()?;
     let server = PhotoMindServer::new(cfg.clone()).await?;
-    let router = Router(server);
+    let router = Router(server.clone());
 
-    // Default stdio transport; HTTP transport can be added later when a public URL is assigned.
-    let svc = router.serve(stdio()).await?;
-    svc.waiting().await?;
+    if let Some(http_addr) = cfg.http_addr.clone() {
+        let addr: SocketAddr = http_addr.parse()?;
+        let session_mgr = std::sync::Arc::new(LocalSessionManager::default());
+        let service = StreamableHttpService::new(
+            move || Ok(router.clone()),
+            session_mgr,
+            StreamableHttpServerConfig::default(),
+        );
+
+        let app = AxumRouter::new()
+            .route("/healthz", get(|| async { "ok" }))
+            .nest_service("/mcp", service);
+
+        tracing::info!(%addr, "starting HTTP MCP server");
+        let listener = tokio::net::TcpListener::bind(addr).await?;
+        axum::serve(listener, app.into_make_service())
+            .with_graceful_shutdown(async {
+                let _ = signal::ctrl_c().await;
+            })
+            .await?;
+    } else {
+        // Default stdio transport
+        let svc = router.serve(stdio()).await?;
+        svc.waiting().await?;
+    }
+
     Ok(())
 }
