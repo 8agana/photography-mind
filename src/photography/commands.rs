@@ -15,7 +15,7 @@ pub async fn import_roster(db: &Surreal<Client>, competition: &str, file_path: &
         Ok(c) => c,
         Err(_) => competition.to_string(),
     };
-    
+
     println!("Importing roster for competition: {}", competition);
     println!("From file: {}", file_path);
 
@@ -605,15 +605,11 @@ pub async fn update_gallery(
         .bind(("rid", relation_id.to_string()))
         .bind(("status", status.to_string()));
 
-    if status == "sent" {
-        if let Some(u) = url {
-            query = query.bind(("url", u.to_string()));
-        }
+    if status == "sent" && let Some(u) = url {
+        query = query.bind(("url", u.to_string()));
     }
-    if status == "purchased" {
-        if let Some(a) = amount {
-            query = query.bind(("amount", a));
-        }
+    if status == "purchased" && let Some(a) = amount {
+        query = query.bind(("amount", a));
     }
     let _ = query.await?;
     println!("Updated gallery status to {}.", status);

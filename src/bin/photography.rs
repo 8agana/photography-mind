@@ -179,7 +179,8 @@ async fn main() -> Result<()> {
     // Dispatch to commands
     match cli.command {
         Commands::Import { competition, file } => {
-            photography_mind::photography::commands::import_roster(&db, &competition, &file).await?;
+            photography_mind::photography::commands::import_roster(&db, &competition, &file)
+                .await?;
         }
         Commands::List { list_command } => match list_command {
             ListCommands::Skaters { status } => {
@@ -231,13 +232,15 @@ async fn main() -> Result<()> {
             last_name,
             competition,
         } => {
-            photography_mind::photography::commands::mark_sent(&db, &last_name, &competition).await?;
+            photography_mind::photography::commands::mark_sent(&db, &last_name, &competition)
+                .await?;
         }
         Commands::RequestTy {
             last_name,
             competition,
         } => {
-            photography_mind::photography::commands::request_ty(&db, &last_name, &competition).await?;
+            photography_mind::photography::commands::request_ty(&db, &last_name, &competition)
+                .await?;
         }
         Commands::SendTy {
             last_name,
@@ -278,8 +281,13 @@ async fn main() -> Result<()> {
             competition,
             status,
         } => {
-            photography_mind::photography::commands::set_status(&db, &last_name, &competition, &status)
-                .await?;
+            photography_mind::photography::commands::set_status(
+                &db,
+                &last_name,
+                &competition,
+                &status,
+            )
+            .await?;
         }
 
         Commands::ListEventsForSkater {

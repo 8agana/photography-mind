@@ -1,6 +1,6 @@
 # Photography Mind (ops)
 
-Lean SurrealDB-backed CLI/MCP-ready code for photography operations (families/skaters/events/gallery status). No thinking tools/embeddings here; cognition lives in SurrealMind.
+Lean SurrealDB-backed CLI + MCP server for photography operations (families/skaters/events/gallery status). No thinking tools/embeddings here; cognition lives in SurrealMind.
 
 ## Binaries
 - `photography` (main CLI): import roster, list/show, update gallery status, thank-you flows, purchases, status reports.
@@ -12,6 +12,15 @@ Lean SurrealDB-backed CLI/MCP-ready code for photography operations (families/sk
 ## Build
 ```bash
 cargo build --release
+```
+
+## Run MCP server
+```bash
+# stdio transport
+cargo run --bin photography_mcp
+
+# enable HTTP transport
+PHOTO_HTTP_ADDR=0.0.0.0:8788 cargo run --bin photography_mcp
 ```
 
 ## Run CLI example
@@ -30,3 +39,5 @@ cargo run --bin photography -- \
 ## Notes
 - Expects SurrealDB namespace `photography`, db `ops`.
 - Keep embeddings/think tools out of this crate; this is ops-only. Cognition stays in SurrealMind.
+- MCP transports: stdio by default; set `PHOTO_HTTP_ADDR` to enable streamable HTTP (e.g., `0.0.0.0:8788`) for remote MCP via cloudflared.
+- Env vars (defaults): `PHOTO_DB_URL=ws://127.0.0.1:8000`, `PHOTO_DB_NS=photography`, `PHOTO_DB_NAME=ops`, `PHOTO_DB_USER=root`, `PHOTO_DB_PASS=root`, optional `PHOTO_HTTP_ADDR`.
