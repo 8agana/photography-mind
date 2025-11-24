@@ -66,6 +66,7 @@ impl ServerHandler for Router {
                 icons: None,
                 annotations: None,
                 output_schema: None,
+                meta: None,
             },
             Tool {
                 name: "status".into(),
@@ -75,6 +76,7 @@ impl ServerHandler for Router {
                 icons: None,
                 annotations: None,
                 output_schema: None,
+                meta: None,
             },
         ];
 
