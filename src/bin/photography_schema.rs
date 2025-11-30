@@ -102,6 +102,31 @@ async fn main() -> Result<()> {
         "DEFINE FIELD ty_sent ON family_competition TYPE bool DEFAULT false;",
         "DEFINE FIELD ty_sent_date ON family_competition TYPE option<datetime>;",
         "DEFINE FIELD created_at ON family_competition TYPE datetime DEFAULT time::now();",
+        // Shoot table - all non-competition photography work
+        "DEFINE TABLE shoot SCHEMAFULL PERMISSIONS FOR select, create, update FULL;",
+        "DEFINE FIELD name ON shoot TYPE string;",
+        "DEFINE FIELD shoot_type ON shoot TYPE string ASSERT $value INSIDE ['portrait', 'senior', 'headshot', 'commercial', 'event', 'camp', 'club', 'other'];",
+        "DEFINE FIELD shoot_date ON shoot TYPE option<datetime>;",
+        "DEFINE FIELD location ON shoot TYPE option<string>;",
+        "DEFINE FIELD notes ON shoot TYPE option<string>;",
+        "DEFINE FIELD created_at ON shoot TYPE datetime DEFAULT time::now();",
+        // Family-shoot relationship (parallel to family_competition)
+        "DEFINE TABLE family_shoot TYPE RELATION FROM family TO shoot SCHEMAFULL PERMISSIONS FOR select, create, update FULL;",
+        "DEFINE FIELD gallery_status ON family_shoot TYPE string DEFAULT 'pending' ASSERT $value INSIDE ['pending', 'culling', 'processing', 'sent', 'purchased', 'not_shot', 'needs_research'];",
+        "DEFINE FIELD sent_date ON family_shoot TYPE option<datetime>;",
+        "DEFINE FIELD request_status ON family_shoot TYPE option<string>;",
+        "DEFINE FIELD ty_requested ON family_shoot TYPE bool DEFAULT false;",
+        "DEFINE FIELD ty_sent ON family_shoot TYPE bool DEFAULT false;",
+        "DEFINE FIELD ty_sent_date ON family_shoot TYPE option<datetime>;",
+        "DEFINE FIELD purchase_amount ON family_shoot TYPE option<float>;",
+        "DEFINE FIELD purchase_date ON family_shoot TYPE option<datetime>;",
+        "DEFINE FIELD created_at ON family_shoot TYPE datetime DEFAULT time::now();",
+        // Skater-shoot relationship (parallel to competed_in)
+        "DEFINE TABLE shot_in TYPE RELATION FROM skater TO shoot SCHEMAFULL PERMISSIONS FOR select, create, update FULL;",
+        "DEFINE FIELD gallery_status ON shot_in TYPE string DEFAULT 'pending' ASSERT $value INSIDE ['pending', 'culling', 'processing', 'sent', 'purchased', 'not_shot', 'needs_research'];",
+        "DEFINE FIELD gallery_url ON shot_in TYPE option<string>;",
+        "DEFINE FIELD notes ON shot_in TYPE option<string>;",
+        "DEFINE FIELD created_at ON shot_in TYPE datetime DEFAULT time::now();",
     ];
 
     // Execute each schema query

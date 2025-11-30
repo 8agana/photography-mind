@@ -2,6 +2,38 @@ use serde::{Deserialize, Serialize};
 use surrealdb::sql::Thing;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Shoot {
+    pub id: Thing,
+    pub name: String,
+    pub shoot_type: String,
+    pub shoot_date: Option<String>,
+    pub location: Option<String>,
+    pub notes: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FamilyShoot {
+    pub id: Thing,
+    #[serde(rename = "in")]
+    pub family: Thing,
+    pub out: Thing,
+    pub gallery_status: String,
+    pub sent_date: Option<String>,
+    pub purchase_amount: Option<f64>,
+    pub purchase_date: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ShotIn {
+    pub id: Thing,
+    #[serde(rename = "in")]
+    pub skater: Thing,
+    pub out: Thing,
+    pub gallery_status: String,
+    pub gallery_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SkaterRow {
     pub first_name: String,
     pub last_name: String,
@@ -31,6 +63,7 @@ pub struct StatusRow {
 pub struct Family {
     pub id: Thing,
     pub last_name: String,
+    #[serde(alias = "delivery_email")]
     pub email: Option<String>,
 }
 

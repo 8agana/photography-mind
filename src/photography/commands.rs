@@ -605,10 +605,14 @@ pub async fn update_gallery(
         .bind(("rid", relation_id.to_string()))
         .bind(("status", status.to_string()));
 
-    if status == "sent" && let Some(u) = url {
+    if status == "sent"
+        && let Some(u) = url
+    {
         query = query.bind(("url", u.to_string()));
     }
-    if status == "purchased" && let Some(a) = amount {
+    if status == "purchased"
+        && let Some(a) = amount
+    {
         query = query.bind(("amount", a));
     }
     let _ = query.await?;
