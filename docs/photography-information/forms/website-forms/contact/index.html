@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Contact Form for Carrd</title>
+    <style>
+        /* Import Montserrat font */
+        @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap");
+        
+        /* Styling to match Sam Atagana Photography website - Revised */
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            font-family: "Montserrat", sans-serif; /* Font Update */
+            background-color: transparent; /* Style Update: Transparent background */
+            color: #444444; /* Style Update: Default text color */
+        }
+        .form-dropdown {
+            width: 100%;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #d3d3d3;
+            background-color: #fafafa;
+            font-size: 16px;
+            font-family: "Montserrat", sans-serif; /* Font Update */
+            color: #444444; /* Style Update: Text color */
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23444444%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); /* Style Update: Arrow color */
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 12px auto;
+        }
+        .form-section {
+            display: none;
+        }
+        .form-section.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 20px; /* Layout Improvement: Uniform spacing */
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #444444; /* Style Update: Text color */
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #d3d3d3;
+            font-size: 16px;
+            font-family: "Montserrat", sans-serif; /* Font Update */
+            box-sizing: border-box;
+            background-color: #fafafa;
+            color: #444444; /* Style Update: Text color */
+        }
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #d3d3d3;
+            min-height: 120px;
+            font-size: 16px;
+            font-family: "Montserrat", sans-serif; /* Font Update */
+            background-color: #fafafa;
+            box-sizing: border-box;
+            color: #444444; /* Style Update: Text color */
+        }
+        .date-time-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .date-input, .time-input {
+            flex: 1;
+            min-width: 120px;
+        }
+        .submit-button {
+            width: 100%;
+            padding: 10px 20px; /* Layout Improvement: Button padding */
+            background-color: #444444; /* Style Update: Button background */
+            color: #f2f2f2; /* Style Update: Button text color */
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: "Montserrat", sans-serif; /* Font Update */
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .submit-button:hover {
+            opacity: 0.9; /* Simple hover effect */
+        }
+         /* *** MODIFICATION: Added CSS for disabled state *** */
+        .submit-button:disabled {
+            background-color: #999999; /* Lighter grey when disabled */
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<script>
+(function () {
+  const sendHeight = () =>
+    window.parent.postMessage(
+      { src: window.location.href, h: document.body.scrollHeight },
+      '*'
+    );
+
+  // fire once and whenever something changes size
+  window.addEventListener('load', sendHeight);
+  new ResizeObserver(sendHeight).observe(document.body);
+})();
+</script>
+<body>
+    <div class="form-container">
+        <form id="contactForm" class="contact-form" novalidate> <input type="text" name="website" style="display:none;">
+            
+            <div class="form-group">
+                <label for="inquiryType" class="form-label">How Can I Help You? *</label> <select id="inquiryType" name="inquiryType" class="form-dropdown" required>
+                    <option value="" disabled selected>Select an option</option>
+                    <option value="general">General Inquiry</option>
+                    <option value="competition">Competition Request</option>
+                    <option value="shoot">Shoot Request</option>
+                </select>
+                <div class="error-message" id="inquiryType-error">Please select an option</div>
+            </div>
+            
+            <div class="form-section general-fields">
+                <div class="form-group">
+                    <label for="firstName" class="form-label">First Name *</label> <input type="text" id="firstName" name="firstName" class="form-input">
+                    <div class="error-message" id="firstName-error">Please enter your first name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastName" class="form-label">Last Name *</label> <input type="text" id="lastName" name="lastName" class="form-input">
+                    <div class="error-message" id="lastName-error">Please enter your last name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email" class="form-label">Email *</label> <input type="email" id="email" name="email" class="form-input">
+                    <div class="error-message" id="email-error">Please enter a valid email address</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone" class="form-label">Phone *</label> <input type="tel" id="phone" name="phone" class="form-input" placeholder="(xxx) xxx-xxxx">
+                    <div class="error-message" id="phone-error">Please enter your phone number</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="generalMessage" class="form-label">How Can I Help? *</label> <textarea id="generalMessage" name="generalMessage" class="form-textarea"></textarea>
+                    <div class="error-message" id="generalMessage-error">Please enter your message</div>
+                </div>
+            </div>
+            
+            <div class="form-section competition-fields">
+                <div class="form-group">
+                    <label for="skatingClub" class="form-label">Skating Club *</label> <input type="text" id="skatingClub" name="skatingClub" class="form-input">
+                    <div class="error-message" id="skatingClub-error">Please enter the skating club name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="rinkName" class="form-label">Rink Name *</label> <input type="text" id="rinkName" name="rinkName" class="form-input">
+                    <div class="error-message" id="rinkName-error">Please enter the rink name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="rinkAddress" class="form-label">Rink Address *</label> <input type="text" id="rinkAddress" name="rinkAddress" class="form-input">
+                    <div class="error-message" id="rinkAddress-error">Please enter the rink address</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="competitionName" class="form-label">Name of Competition *</label> <input type="text" id="competitionName" name="competitionName" class="form-input">
+                    <div class="error-message" id="competitionName-error">Please enter the competition name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="firstDay" class="form-label">First Day *</label> <input type="date" id="firstDay" name="firstDay" class="form-input">
+                    <div class="error-message" id="firstDay-error">Please select the first day</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastDay" class="form-label">Last Day *</label> <input type="date" id="lastDay" name="lastDay" class="form-input">
+                    <div class="error-message" id="lastDay-error">Please select the last day</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="compFirstName" class="form-label">First Name *</label> <input type="text" id="compFirstName" name="compFirstName" class="form-input">
+                    <div class="error-message" id="compFirstName-error">Please enter your first name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="compLastName" class="form-label">Last Name *</label> <input type="text" id="compLastName" name="compLastName" class="form-input">
+                    <div class="error-message" id="compLastName-error">Please enter your last name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="compEmail" class="form-label">Email *</label> <input type="email" id="compEmail" name="compEmail" class="form-input">
+                    <div class="error-message" id="compEmail-error">Please enter a valid email address</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="compPhone" class="form-label">Phone *</label> <input type="tel" id="compPhone" name="compPhone" class="form-input" placeholder="(xxx) xxx-xxxx">
+                    <div class="error-message" id="compPhone-error">Please enter your phone number</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="compAdditionalInfo" class="form-label">What Else Should I Know?</label> <textarea id="compAdditionalInfo" name="compAdditionalInfo" class="form-textarea"></textarea>
+                </div>
+            </div>
+            
+            <div class="form-section shoot-fields">
+                <div class="form-group">
+                    <label for="shootFirstName" class="form-label">First Name *</label> <input type="text" id="shootFirstName" name="shootFirstName" class="form-input">
+                    <div class="error-message" id="shootFirstName-error">Please enter your first name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="shootLastName" class="form-label">Last Name *</label> <input type="text" id="shootLastName" name="shootLastName" class="form-input">
+                    <div class="error-message" id="shootLastName-error">Please enter your last name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="shootEmail" class="form-label">Email *</label> <input type="email" id="shootEmail" name="shootEmail" class="form-input">
+                    <div class="error-message" id="shootEmail-error">Please enter a valid email address</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="shootPhone" class="form-label">Phone *</label> <input type="tel" id="shootPhone" name="shootPhone" class="form-input" placeholder="(xxx) xxx-xxxx">
+                    <div class="error-message" id="shootPhone-error">Please enter your phone number</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="shootType" class="form-label">Type of Shoot *</label> <select id="shootType" name="shootType" class="form-dropdown">
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="Portrait">Portrait</option>
+                        <option value="Headshots">Headshots</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Senior">Senior</option>
+                        <option value="Family">Family</option>
+                        <option value="Passport Photo">Passport Photo</option>
+                        <option value="Other">Other (Explain in Comments)</option>
+                    </select>
+                    <div class="error-message" id="shootType-error">Please select a shoot type</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="shootDuration" class="form-label">How Long Do You Need Me? *</label> <select id="shootDuration" name="shootDuration" class="form-dropdown">
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="Half Hour">Half Hour</option>
+                        <option value="Full Hour">Full Hour</option>
+                        <option value="Half Day">Half Day</option>
+                        <option value="Full Day">Full Day</option>
+                        <option value="Other">Other (Explain in Comments)</option>
+                    </select>
+                    <div class="error-message" id="shootDuration-error">Please select a duration</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="shootDate" class="form-label">Requested Date *</label> <input type="date" id="shootDate" name="shootDate" class="form-input">
+                    <div class="error-message" id="shootDate-error">Please select a date</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="shootTime" class="form-label">Requested Time *</label> <input type="text" id="shootTime" name="shootTime" placeholder="e.g., 2:00 PM" class="form-input">
+                    <div class="error-message" id="shootTime-error">Please enter a time</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="shootAdditionalInfo" class="form-label">What Else Should I Know?</label> <textarea id="shootAdditionalInfo" name="shootAdditionalInfo" class="form-textarea"></textarea>
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-button" id="submit-button-contact">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        // Form functionality
+        document.addEventListener("DOMContentLoaded", function() {
+            const contactForm = document.getElementById("contactForm");
+            const inquiryType = document.getElementById("inquiryType");
+            const generalFields = document.querySelector(".general-fields");
+            const competitionFields = document.querySelector(".competition-fields");
+            const shootFields = document.querySelector(".shoot-fields");
+            const allSections = [generalFields, competitionFields, shootFields];
+            
+            // Helper function to clear fields in a section
+            function clearSectionFields(section) {
+                const inputs = section.querySelectorAll("input, textarea, select");
+                inputs.forEach(input => {
+                    if (input.type === "checkbox" || input.type === "radio") {
+                        input.checked = false;
+                    } else {
+                        input.value = "";
+                    }
+                });
+            }
+            
+            // Helper function to manage required attributes
+            function manageRequiredAttributes(section, isRequired) {
+                const inputs = section.querySelectorAll("input, textarea, select");
+                inputs.forEach(input => {
+                    // Only manage required for inputs that should be required
+                    // Exclude the optional "Additional Info" fields
+                    if (input.id !== "compAdditionalInfo" && input.id !== "shootAdditionalInfo" && input.id !== "generalMessage") { // Also exclude general message which seems optional based on context
+                         if (isRequired) {
+                            input.setAttribute("required", "");
+                         } else {
+                            input.removeAttribute("required");
+                         }
+                    }
+                     // Special handling for generalMessage - ensure it's required only for general inquiry
+                     if (input.id === "generalMessage") {
+                         if (isRequired && inquiryType.value === 'general') {
+                            input.setAttribute("required", "");
+                         } else {
+                            input.removeAttribute("required");
+                         }
+                     }
+                });
+            }
+            
+            // Toggle form sections based on inquiry type
+            function toggleFormSections() {
+                const selectedValue = inquiryType.value;
+                
+                // Clear fields and remove required attribute from all sections first
+                allSections.forEach(section => {
+                    // Only clear if the section exists
+                    if (section) { 
+                        clearSectionFields(section);
+                        manageRequiredAttributes(section, false);
+                        section.classList.remove("active");
+                    }
+                });
+                
+                // Show the selected section and set its fields as required
+                if (selectedValue === "general") {
+                    if(generalFields) {
+                        generalFields.classList.add("active");
+                        manageRequiredAttributes(generalFields, true);
+                    }
+                } else if (selectedValue === "competition") {
+                     if(competitionFields) {
+                        competitionFields.classList.add("active");
+                        manageRequiredAttributes(competitionFields, true);
+                     }
+                } else if (selectedValue === "shoot") {
+                    if(shootFields) {
+                        shootFields.classList.add("active");
+                        manageRequiredAttributes(shootFields, true);
+                    }
+                }
+            }
+            
+            inquiryType.addEventListener("change", toggleFormSections);
+            
+            // Form validation (Custom JS validation)
+            function validateForm(event) {
+                let isValid = true;
+                const selectedValue = inquiryType.value;
+                
+                // Clear all error messages
+                document.querySelectorAll(".error-message").forEach(el => {
+                    el.style.display = "none";
+                });
+                
+                // Validate inquiry type (always required)
+                if (!selectedValue) {
+                    document.getElementById("inquiryType-error").style.display = "block";
+                    isValid = false;
+                }
+                
+                // Validate fields only in the active section
+                const activeSection = document.querySelector(".form-section.active");
+                if (activeSection) {
+                    const requiredInputs = activeSection.querySelectorAll("[required]");
+                    requiredInputs.forEach(input => {
+                         // Check if the input is actually visible (important if styles hide things)
+                         // and if it doesn't have a value
+                        if (input.offsetParent !== null && !input.value) { 
+                            const errorElement = document.getElementById(`${input.id}-error`);
+                            if (errorElement) {
+                                errorElement.style.display = "block";
+                            }
+                            isValid = false;
+                        } else if (input.offsetParent !== null && input.type === "email" && !/^\S+@\S+\.\S+$/.test(input.value)) {
+                            const errorElement = document.getElementById(`${input.id}-error`);
+                            if (errorElement) {
+                                errorElement.style.display = "block";
+                            }
+                            isValid = false;
+                        }
+                    });
+                }
+                
+                // Original code prevented default here if invalid. 
+                // It's better to do this check where the function is called.
+                // if (!isValid) {
+                //    event.preventDefault(); // Prevent submission if validation fails
+                // }
+                
+                return isValid;
+            }
+            
+            // Form submission
+            contactForm.addEventListener("submit", function(event) {
+                event.preventDefault(); // Always prevent default initially
+                
+                // Honeypot check
+                const honeypot = contactForm.querySelector("input[name=\"website\"]");
+                if (honeypot.value) {
+                    console.log("Honeypot triggered, blocking submission.");
+                    return; // Block submission if honeypot is filled
+                }
+                
+                // Perform custom validation BEFORE trying to submit
+                if (validateForm(event)) { 
+                    // Validation passed, proceed with submission logic
+
+                    // *** MODIFICATION: Added button handling START ***
+                    const submitButton = document.getElementById('submit-button-contact'); 
+                    submitButton.disabled = true; 
+                    submitButton.textContent = 'Submitting...';
+                    // *** MODIFICATION: Added button handling END ***
+
+                    // Form is valid, prepare data for submission
+                    const scriptURL = "https://script.google.com/macros/s/AKfycby-oQ6VL8VVD8HPov8YgIO_jxvCiNWfjmvI5JGPIDlfPljxoUZkikNwnTxPe08Fpc2E/exec";
+                    
+                    // ** FETCH BLOCK **
+                    const formData = new FormData(this);        // "this" = <form>
+                    fetch(scriptURL, {
+                      method: 'POST',
+                      body: formData,
+                      mode: 'no-cors'           // kills the pre-flight
+                    })
+                    .then(() => {
+                         // Assuming success if fetch doesn't throw error with no-cors
+                         // *** MODIFICATION: Updated redirect URL to use anchor ***
+                         window.location.href = 'https://www.samataganaphotography.com/#thankyoucontact'; 
+                    })
+                    .catch((error) => { // Catch network errors or fetch setup errors
+                        console.error('Fetch Error!', error); 
+                        alert('Error submitting form. Please check your connection and try again.'); 
+
+                        // *** MODIFICATION: Added button reset in CATCH START ***
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Submit'; 
+                        // *** MODIFICATION: Added button reset in CATCH END ***
+                    });
+                    // ** END FETCH BLOCK **
+                }
+                 // If validateForm returns false, the function simply ends here, 
+                 // and the default prevention stops the native submission.
+            });
+            
+            // Initial setup on load (in case a value is pre-selected or restored)
+            toggleFormSections(); 
+        });
+    </script>
+</body>
+</html>

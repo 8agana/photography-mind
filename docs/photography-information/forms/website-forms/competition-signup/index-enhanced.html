@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competition Sign-Up Form for Carrd</title>
+    <style>
+        /* Import Montserrat font */
+        @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap");
+        
+        /* Styling to match Sam Atagana Photography website - Revised */
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            font-family: "Montserrat", sans-serif;
+            background-color: transparent;
+            color: #444444;
+        }
+        .form-step {
+            display: none;
+        }
+        .form-step.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #444444;
+        }
+        .form-dropdown {
+            width: 100%;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #d3d3d3;
+            background-color: #fafafa;
+            font-size: 16px;
+            font-family: "Montserrat", sans-serif;
+            color: #444444;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23444444%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 12px auto;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #d3d3d3;
+            font-size: 16px;
+            font-family: "Montserrat", sans-serif;
+            box-sizing: border-box;
+            background-color: #fafafa;
+            color: #444444;
+        }
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #d3d3d3;
+            min-height: 120px;
+            font-size: 16px;
+            font-family: "Montserrat", sans-serif;
+            background-color: #fafafa;
+            box-sizing: border-box;
+            color: #444444;
+        }
+        .form-checkbox {
+            margin-right: 8px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            color: #444444;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .back-button, .next-button, .submit-button {
+            padding: 10px 20px;
+            background-color: #444444;
+            color: #f2f2f2;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: "Montserrat", sans-serif;
+            cursor: pointer;
+        }
+        .back-button:hover, .next-button:hover, .submit-button:hover {
+            opacity: 0.9;
+        }
+        .submit-button:disabled {
+            background-color: #999999;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #d3d3d3;
+            margin: 0 5px;
+        }
+        .step-dot.active {
+            background-color: #444444;
+        }
+        .skater-fields {
+            display: none;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #d3d3d3;
+        }
+        .skater-fields.active {
+            display: block;
+        }
+        .skater-checkbox-group {
+            display: none;
+        }
+        .skater-checkbox-group.visible {
+            display: block;
+        }
+        .saved-info-notice {
+            background-color: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<script>
+(function () {
+  const sendHeight = () =>
+    window.parent.postMessage(
+      { src: window.location.href, h: document.body.scrollHeight },
+      '*'
+    );
+
+  // fire once and whenever something changes size
+  window.addEventListener('load', sendHeight);
+  new ResizeObserver(sendHeight).observe(document.body);
+})();
+</script>
+<body>
+    <div class="form-container">
+        <form id="competitionForm" class="competition-form">
+            <input type="text" name="website" style="display:none;">
+            
+            <div class="step-indicator">
+                <div class="step-dot active" data-step="1"></div>
+                <div class="step-dot" data-step="2"></div>
+                <div class="step-dot" data-step="3"></div>
+            </div>
+            
+            <div class="form-step step-1 active">
+                <div class="form-group">
+                    <label for="competitionSelect" class="form-label">Select Your Competition *</label>
+                    <select id="competitionSelect" name="competitionSelect" class="form-dropdown" required>
+                        <option value="" disabled selected>Loading competitions...</option>
+                    </select>
+                    <div class="error-message" id="competitionSelect-error">Please select a competition</div>
+                </div>
+                
+                <div class="button-container">
+                    <div></div>
+                    <button type="button" class="next-button" id="step1Next">Next</button>
+                </div>
+            </div>
+            
+            <div class="form-step step-2">
+                <div id="savedInfoNotice" class="saved-info-notice" style="display: none;">
+                    We've filled in your information from your last visit. Feel free to update if needed.
+                </div>
+                
+                <div class="form-group">
+                    <label for="requesterFirstName" class="form-label">Requester's First Name *</label>
+                    <input type="text" id="requesterFirstName" name="requesterFirstName" class="form-input" required>
+                    <div class="error-message" id="requesterFirstName-error">Please enter your first name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="requesterLastName" class="form-label">Requester's Last Name *</label>
+                    <input type="text" id="requesterLastName" name="requesterLastName" class="form-input" required>
+                    <div class="error-message" id="requesterLastName-error">Please enter your last name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="requesterEmail" class="form-label">Requester's Email *</label>
+                    <input type="email" id="requesterEmail" name="requesterEmail" class="form-input" required>
+                    <div class="error-message" id="requesterEmail-error">Please enter a valid email address</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="requesterPhone" class="form-label">Requester's Phone *</label>
+                    <input type="tel" id="requesterPhone" name="requesterPhone" class="form-input" placeholder="(xxx) xxx-xxxx" required>
+                    <div class="error-message" id="requesterPhone-error">Please enter your phone number</div>
+                </div>
+                
+                <div class="button-container">
+                    <button type="button" class="back-button" id="step2Back">Back</button>
+                    <button type="button" class="next-button" id="step2Next">Next</button>
+                </div>
+            </div>
+            
+            <div class="form-step step-3">
+                <div class="form-group">
+                    <label for="skaterName1" class="form-label">Skater 1 Name *</label>
+                    <input type="text" id="skaterName1" name="skaterName1" class="form-input" required>
+                    <div class="error-message" id="skaterName1-error">Please enter the skater's name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="numEvents1" class="form-label">Skater 1 # of Events *</label>
+                    <input type="number" id="numEvents1" name="numEvents1" min="1" class="form-input" required>
+                    <div class="error-message" id="numEvents1-error">Please enter the number of events</div>
+                </div>
+                
+                <div class="form-group skater-checkbox-group visible">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="hasSkater2" name="hasSkater2" class="form-checkbox skater-toggle" data-skater="2">
+                        I have a second skater
+                    </label>
+                </div>
+                <div id="skaterFields2" class="skater-fields">
+                    <div class="form-group">
+                        <label for="skaterName2" class="form-label">Skater 2 Name *</label>
+                        <input type="text" id="skaterName2" name="skaterName2" class="form-input">
+                        <div class="error-message" id="skaterName2-error">Please enter the skater's name</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="numEvents2" class="form-label">Skater 2 # of Events *</label>
+                        <input type="number" id="numEvents2" name="numEvents2" min="1" class="form-input">
+                        <div class="error-message" id="numEvents2-error">Please enter the number of events</div>
+                    </div>
+                </div>
+
+                <div class="form-group skater-checkbox-group" id="skaterCheckboxGroup3">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="hasSkater3" name="hasSkater3" class="form-checkbox skater-toggle" data-skater="3">
+                        I have a third skater
+                    </label>
+                </div>
+                <div id="skaterFields3" class="skater-fields">
+                    <div class="form-group">
+                        <label for="skaterName3" class="form-label">Skater 3 Name *</label>
+                        <input type="text" id="skaterName3" name="skaterName3" class="form-input">
+                        <div class="error-message" id="skaterName3-error">Please enter the skater's name</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="numEvents3" class="form-label">Skater 3 # of Events *</label>
+                        <input type="number" id="numEvents3" name="numEvents3" min="1" class="form-input">
+                        <div class="error-message" id="numEvents3-error">Please enter the number of events</div>
+                    </div>
+                </div>
+
+                <div class="form-group skater-checkbox-group" id="skaterCheckboxGroup4">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="hasSkater4" name="hasSkater4" class="form-checkbox skater-toggle" data-skater="4">
+                        I have a fourth skater
+                    </label>
+                </div>
+                <div id="skaterFields4" class="skater-fields">
+                    <div class="form-group">
+                        <label for="skaterName4" class="form-label">Skater 4 Name *</label>
+                        <input type="text" id="skaterName4" name="skaterName4" class="form-input">
+                        <div class="error-message" id="skaterName4-error">Please enter the skater's name</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="numEvents4" class="form-label">Skater 4 # of Events *</label>
+                        <input type="number" id="numEvents4" name="numEvents4" min="1" class="form-input">
+                        <div class="error-message" id="numEvents4-error">Please enter the number of events</div>
+                    </div>
+                </div>
+
+                <div class="form-group skater-checkbox-group" id="skaterCheckboxGroup5">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="hasSkater5" name="hasSkater5" class="form-checkbox skater-toggle" data-skater="5">
+                        I have a fifth skater
+                    </label>
+                </div>
+                <div id="skaterFields5" class="skater-fields">
+                    <div class="form-group">
+                        <label for="skaterName5" class="form-label">Skater 5 Name *</label>
+                        <input type="text" id="skaterName5" name="skaterName5" class="form-input">
+                        <div class="error-message" id="skaterName5-error">Please enter the skater's name</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="numEvents5" class="form-label">Skater 5 # of Events *</label>
+                        <input type="number" id="numEvents5" name="numEvents5" min="1" class="form-input">
+                        <div class="error-message" id="numEvents5-error">Please enter the number of events</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="additionalInfo" class="form-label">Anything Else I Should Know?</label>
+                    <textarea id="additionalInfo" name="additionalInfo" class="form-textarea"></textarea>
+                </div>
+                
+                <div class="button-container">
+                    <button type="button" class="back-button" id="step3Back">Back</button>
+                    <button type="submit" class="submit-button" id="submit-button-competition">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Load shared utilities -->
+    <script src="../shared.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const competitionForm = document.getElementById('competitionForm');
+            const steps = document.querySelectorAll('.form-step');
+            const dots = document.querySelectorAll('.step-dot');
+            let currentStep = 1;
+
+            // Initialize shared utilities
+            FormUtils.enableAutoSave('competition', competitionForm);
+            FormUtils.formatPhoneNumber(document.getElementById('requesterPhone'));
+
+            // Load competitions from JSON (with fallback)
+            const competitionSelect = document.getElementById('competitionSelect');
+            FormUtils.loadCompetitions('../competitions.json', competitionSelect)
+                .catch(() => {
+                    // Fallback to hardcoded if JSON fails
+                    const competitions = ['2025 Pony Express', '2025 Fall Fling'];
+                    competitionSelect.innerHTML = '<option value="" disabled selected>Select an option</option>';
+                    competitions.forEach(comp => {
+                        const option = document.createElement('option');
+                        option.value = comp;
+                        option.textContent = comp;
+                        competitionSelect.appendChild(option);
+                    });
+                });
+
+            // Check for saved user info on step 2
+            function checkSavedUserInfo() {
+                const userInfo = FormUtils.getSavedUserInfo();
+                if (userInfo) {
+                    if (userInfo.firstName) document.getElementById('requesterFirstName').value = userInfo.firstName;
+                    if (userInfo.lastName) document.getElementById('requesterLastName').value = userInfo.lastName;
+                    if (userInfo.email) document.getElementById('requesterEmail').value = userInfo.email;
+                    if (userInfo.phone) document.getElementById('requesterPhone').value = userInfo.phone;
+                    
+                    const notice = document.getElementById('savedInfoNotice');
+                    if (notice && (userInfo.firstName || userInfo.email)) {
+                        notice.style.display = 'block';
+                    }
+                }
+            }
+
+            function updateStepIndicator() {
+                dots.forEach(dot => {
+                    dot.classList.remove('active');
+                    if (parseInt(dot.getAttribute('data-step')) === currentStep) {
+                        dot.classList.add('active');
+                    }
+                });
+            }
+
+            function showStep(stepNumber) {
+                steps.forEach(step => step.classList.remove('active'));
+                document.querySelector(`.step-${stepNumber}`).classList.add('active');
+                currentStep = stepNumber;
+                updateStepIndicator();
+                
+                // Check for saved info when showing step 2
+                if (stepNumber === 2) {
+                    checkSavedUserInfo();
+                }
+            }
+
+            function validateStep(stepNumber) {
+                let isValid = true;
+                const currentStepElement = document.querySelector(`.step-${stepNumber}`);
+                const requiredInputs = currentStepElement.querySelectorAll('[required]');
+                
+                // Clear previous errors in this step
+                currentStepElement.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+                
+                requiredInputs.forEach(input => {
+                    // Only validate if the input is visible
+                    if (input.offsetParent !== null) {
+                        FormUtils.hideError(input);
+                        
+                        if (!input.value) {
+                            FormUtils.showError(input, `Please enter ${input.placeholder || 'a value'}`);
+                            isValid = false;
+                        } else if (input.type === 'email' && !FormUtils.isValidEmail(input.value)) {
+                            FormUtils.showError(input, 'Please enter a valid email address');
+                            isValid = false;
+                        } else if (input.id.includes('Phone') && !FormUtils.isValidPhone(input.value)) {
+                            FormUtils.showError(input, 'Please enter a valid 10-digit phone number');
+                            isValid = false;
+                        } else if (input.type === 'number' && parseInt(input.value) < 1) {
+                            FormUtils.showError(input, 'Must be at least 1');
+                            isValid = false;
+                        }
+                    }
+                });
+                
+                // Save user info after successful step 2 validation
+                if (stepNumber === 2 && isValid) {
+                    FormUtils.saveUserInfo({
+                        firstName: document.getElementById('requesterFirstName').value,
+                        lastName: document.getElementById('requesterLastName').value,
+                        email: document.getElementById('requesterEmail').value,
+                        phone: document.getElementById('requesterPhone').value
+                    });
+                }
+                
+                return isValid;
+            }
+
+            // Navigation listeners
+            document.getElementById('step1Next').addEventListener('click', function() {
+                if (validateStep(1)) {
+                    showStep(2);
+                }
+            });
+            document.getElementById('step2Back').addEventListener('click', function() {
+                showStep(1);
+            });
+            document.getElementById('step2Next').addEventListener('click', function() {
+                if (validateStep(2)) {
+                    showStep(3);
+                }
+            });
+            document.getElementById('step3Back').addEventListener('click', function() {
+                showStep(2);
+            });
+
+            // Skater checkbox logic (unchanged)
+            const skaterToggles = document.querySelectorAll('.skater-toggle');
+            skaterToggles.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const skaterNum = parseInt(this.getAttribute('data-skater'));
+                    const fieldsDiv = document.getElementById(`skaterFields${skaterNum}`);
+                    const nameInput = document.getElementById(`skaterName${skaterNum}`);
+                    const eventsInput = document.getElementById(`numEvents${skaterNum}`);
+                    const nextCheckboxGroup = document.getElementById(`skaterCheckboxGroup${skaterNum + 1}`);
+
+                    if (this.checked) {
+                        fieldsDiv.classList.add('active');
+                        nameInput.setAttribute('required', '');
+                        eventsInput.setAttribute('required', '');
+                        if (nextCheckboxGroup) {
+                            nextCheckboxGroup.classList.add('visible');
+                        }
+                    } else {
+                        fieldsDiv.classList.remove('active');
+                        nameInput.removeAttribute('required');
+                        eventsInput.removeAttribute('required');
+                        nameInput.value = '';
+                        eventsInput.value = '';
+                        
+                        // Hide all subsequent checkboxes and clear their fields
+                        for (let i = skaterNum + 1; i <= 5; i++) {
+                            const subsequentCheckboxGroup = document.getElementById(`skaterCheckboxGroup${i}`);
+                            const subsequentCheckbox = document.getElementById(`hasSkater${i}`);
+                            const subsequentFieldsDiv = document.getElementById(`skaterFields${i}`);
+                            const subsequentNameInput = document.getElementById(`skaterName${i}`);
+                            const subsequentEventsInput = document.getElementById(`numEvents${i}`);
+
+                            if (subsequentCheckboxGroup) subsequentCheckboxGroup.classList.remove('visible');
+                            if (subsequentCheckbox) subsequentCheckbox.checked = false;
+                            if (subsequentFieldsDiv) subsequentFieldsDiv.classList.remove('active');
+                            if (subsequentNameInput) {
+                                subsequentNameInput.removeAttribute('required');
+                                subsequentNameInput.value = '';
+                            }
+                            if (subsequentEventsInput) {
+                                subsequentEventsInput.removeAttribute('required');
+                                subsequentEventsInput.value = '';
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Form submission using shared utility
+            const scriptURL = 'https://script.google.com/macros/s/AKfycby-oQ6VL8VVD8HPov8YgIO_jxvCiNWfjmvI5JGPIDlfPljxoUZkikNwnTxPe08Fpc2E/exec';
+            const submitButton = document.getElementById('submit-button-competition');
+            
+            competitionForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                if (!validateStep(3)) {
+                    return;
+                }
+                
+                // Use shared submission handler
+                const honeypot = competitionForm.querySelector('input[name="website"]');
+                if (honeypot.value) {
+                    console.log('Honeypot triggered');
+                    return;
+                }
+
+                submitButton.disabled = true;
+                submitButton.textContent = 'Submitting...';
+
+                const formData = new FormData(competitionForm);
+                fetch(scriptURL, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors'
+                })
+                .then(() => {
+                    // Clear saved form data on success
+                    localStorage.removeItem('samataganaphotography_competition');
+                    window.location.href = 'https://www.samataganaphotography.com/#thankyousignup';
+                })
+                .catch((error) => {
+                    console.error('Fetch Error!', error);
+                    alert('Error submitting form. Please check your connection and try again.');
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Submit';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

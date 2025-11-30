@@ -1,0 +1,20 @@
+[
+    {
+        "name": "2025 Pony Express",
+        "dates": "Jan 15-17",
+        "location": "Kansas City, MO",
+        "active": true
+    },
+    {
+        "name": "2025 Fall Fling", 
+        "dates": "Oct 22-24",
+        "location": "St. Louis, MO",
+        "active": true
+    },
+    {
+        "name": "2025 Winter Classic",
+        "dates": "Dec 5-7",
+        "location": "Chicago, IL",
+        "active": false
+    }
+]
