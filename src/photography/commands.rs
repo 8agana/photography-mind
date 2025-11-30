@@ -191,31 +191,39 @@ pub async fn mark_sent(db: &Surreal<Client>, last_name: &str, comp: &str) -> Res
         return Ok(());
     }
 
-    // 2. Delete existing edges then create new one (avoiding duplicates)
+    // 2. Update existing edge or create new one (avoiding duplicates and data loss)
     println!(
         "Marking SENT: {} -> {}",
         family_id_full, competition_id_only
     );
-    let delete_sql = "
-        DELETE family_competition
+
+    // Try to update existing edge first
+    let update_sql = "
+        UPDATE family_competition
+        SET gallery_status = 'sent', sent_date = time::now()
         WHERE in = type::thing('family', $family_id)
         AND out = type::thing('competition', $competition_id)
     ";
-    let _ = db
-        .query(delete_sql)
+    let mut update_resp = db
+        .query(update_sql)
         .bind(("family_id", family_id_only.clone()))
         .bind(("competition_id", competition_id_only.clone()))
         .await?;
-
-    let sql = "
-        RELATE (type::thing('family', $family_id))->family_competition->(type::thing('competition', $competition_id))
-        SET gallery_status = 'sent', sent_date = time::now()
-    ";
-    let _ = db
-        .query(sql)
-        .bind(("family_id", family_id_only))
-        .bind(("competition_id", competition_id_only))
-        .await?;
+    
+    // Check if anything was updated
+    let updated: Vec<Value> = update_resp.take(0)?;
+    if updated.is_empty() {
+        // Fallback to create if not exists
+        let create_sql = "
+            RELATE (type::thing('family', $family_id))->family_competition->(type::thing('competition', $competition_id))
+            SET gallery_status = 'sent', sent_date = time::now()
+        ";
+        let _ = db
+            .query(create_sql)
+            .bind(("family_id", family_id_only))
+            .bind(("competition_id", competition_id_only))
+            .await?;
+    }
     println!("✅ Marked as sent.");
     Ok(())
 }
@@ -243,26 +251,30 @@ pub async fn request_ty(db: &Surreal<Client>, last_name: &str, comp: &str) -> Re
         "Requesting TY: {} -> {}",
         family_id_full, competition_id_only
     );
-    let delete_sql = "
-        DELETE family_competition
+    let update_sql = "
+        UPDATE family_competition
+        SET ty_requested = true
         WHERE in = type::thing('family', $family_id)
         AND out = type::thing('competition', $competition_id)
     ";
-    let _ = db
-        .query(delete_sql)
+    let mut update_resp = db
+        .query(update_sql)
         .bind(("family_id", family_id_only.clone()))
         .bind(("competition_id", competition_id_only.clone()))
         .await?;
 
-    let sql = "
-        RELATE (type::thing('family', $family_id))->family_competition->(type::thing('competition', $competition_id))
-        SET ty_requested = true
-    ";
-    let _ = db
-        .query(sql)
-        .bind(("family_id", family_id_only))
-        .bind(("competition_id", competition_id_only))
-        .await?;
+    let updated: Vec<Value> = update_resp.take(0)?;
+    if updated.is_empty() {
+        let create_sql = "
+            RELATE (type::thing('family', $family_id))->family_competition->(type::thing('competition', $competition_id))
+            SET ty_requested = true
+        ";
+        let _ = db
+            .query(create_sql)
+            .bind(("family_id", family_id_only))
+            .bind(("competition_id", competition_id_only))
+            .await?;
+    }
     println!("✅ TY requested.");
     Ok(())
 }
@@ -287,26 +299,30 @@ pub async fn send_ty(db: &Surreal<Client>, last_name: &str, comp: &str) -> Resul
     }
 
     println!("Sending TY: {} -> {}", family_id_full, competition_id_only);
-    let delete_sql = "
-        DELETE family_competition
+    let update_sql = "
+        UPDATE family_competition
+        SET ty_sent = true, ty_sent_date = time::now()
         WHERE in = type::thing('family', $family_id)
         AND out = type::thing('competition', $competition_id)
     ";
-    let _ = db
-        .query(delete_sql)
+    let mut update_resp = db
+        .query(update_sql)
         .bind(("family_id", family_id_only.clone()))
         .bind(("competition_id", competition_id_only.clone()))
         .await?;
 
-    let sql = "
-        RELATE (type::thing('family', $family_id))->family_competition->(type::thing('competition', $competition_id))
-        SET ty_sent = true, ty_sent_date = time::now()
-    ";
-    let _ = db
-        .query(sql)
-        .bind(("family_id", family_id_only))
-        .bind(("competition_id", competition_id_only))
-        .await?;
+    let updated: Vec<Value> = update_resp.take(0)?;
+    if updated.is_empty() {
+        let create_sql = "
+            RELATE (type::thing('family', $family_id))->family_competition->(type::thing('competition', $competition_id))
+            SET ty_sent = true, ty_sent_date = time::now()
+        ";
+        let _ = db
+            .query(create_sql)
+            .bind(("family_id", family_id_only))
+            .bind(("competition_id", competition_id_only))
+            .await?;
+    }
     println!("✅ TY sent.");
     Ok(())
 }
@@ -411,27 +427,32 @@ pub async fn record_purchase(
         "Recording purchase: {} -> ${} for {}",
         family_id_full, amount, competition_id_only
     );
-    let delete_sql = "
-        DELETE family_competition
+    let update_sql = "
+        UPDATE family_competition
+        SET purchase_amount = $amount, gallery_status = 'purchased'
         WHERE in = type::thing('family', $family_id)
         AND out = type::thing('competition', $competition_id)
     ";
-    let _ = db
-        .query(delete_sql)
+    let mut update_resp = db
+        .query(update_sql)
         .bind(("family_id", family_id_only.clone()))
         .bind(("competition_id", competition_id_only.clone()))
-        .await?;
-
-    let sql = "
-        RELATE (type::thing('family', $family_id))->family_competition->(type::thing('competition', $competition_id))
-        SET purchase_amount = $amount, gallery_status = 'purchased'
-    ";
-    let _ = db
-        .query(sql)
-        .bind(("family_id", family_id_only))
-        .bind(("competition_id", competition_id_only))
         .bind(("amount", amount))
         .await?;
+
+    let updated: Vec<Value> = update_resp.take(0)?;
+    if updated.is_empty() {
+        let create_sql = "
+            RELATE (type::thing('family', $family_id))->family_competition->(type::thing('competition', $competition_id))
+            SET purchase_amount = $amount, gallery_status = 'purchased'
+        ";
+        let _ = db
+            .query(create_sql)
+            .bind(("family_id", family_id_only))
+            .bind(("competition_id", competition_id_only))
+            .bind(("amount", amount))
+            .await?;
+    }
     println!("✅ Purchase recorded.");
     Ok(())
 }
@@ -868,32 +889,37 @@ pub async fn set_status(
         return Ok(());
     }
 
-    // DELETE+RELATE pattern
+    // Update or create pattern
     println!(
         "Setting status to '{}': {} -> {}",
         status, family_id_full, competition_id_only
     );
-    let delete_sql = "
-        DELETE family_competition
+    let update_sql = "
+        UPDATE family_competition
+        SET gallery_status = $status
         WHERE in = type::thing('family', $family_id)
         AND out = type::thing('competition', $competition_id)
     ";
-    let _ = db
-        .query(delete_sql)
+    let mut update_resp = db
+        .query(update_sql)
         .bind(("family_id", family_id_only.clone()))
         .bind(("competition_id", competition_id_only.clone()))
-        .await?;
-
-    let sql = "
-        RELATE (type::thing('family', $family_id))->family_competition->(type::thing('competition', $competition_id))
-        SET gallery_status = $status
-    ";
-    let _ = db
-        .query(sql)
-        .bind(("family_id", family_id_only))
-        .bind(("competition_id", competition_id_only))
         .bind(("status", status.to_string()))
         .await?;
+
+    let updated: Vec<Value> = update_resp.take(0)?;
+    if updated.is_empty() {
+        let create_sql = "
+            RELATE (type::thing('family', $family_id))->family_competition->(type::thing('competition', $competition_id))
+            SET gallery_status = $status
+        ";
+        let _ = db
+            .query(create_sql)
+            .bind(("family_id", family_id_only))
+            .bind(("competition_id", competition_id_only))
+            .bind(("status", status.to_string()))
+            .await?;
+    }
     println!("✅ Status set to '{}'.", status);
     Ok(())
 }
