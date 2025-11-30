@@ -2,12 +2,14 @@
 
 Lean SurrealDB-backed CLI + MCP server for photography operations (families/skaters/events/gallery status). No thinking tools/embeddings here; cognition lives in SurrealMind.
 
+See [CHANGELOG.md](CHANGELOG.md) for recent updates.
+
 ## Binaries
 - `photography` (main CLI): import roster, list/show, update gallery status, thank-you flows, purchases, status reports.
-- `photography_schema`: initialize photography schema.
+- `photography_mcp`: Axum-based MCP server for remote or local integration.
+- `photography_schema`: initialize/update photography schema.
 - `photography_test_data`: seed sample data.
 - `photography_verify`: validation helpers.
-- `reembed_photography_kg`: (legacy) re-embed photography KG if present.
 
 ## Build
 ```bash
