@@ -44,8 +44,13 @@ pub async fn import_roster(db: &Surreal<Client>, competition: &str, file_path: &
         // Parse skater names
         let parsed = parse_skater_names(&row.skater_name)?;
 
-        // If family or has email, upsert family
-        let family_id = if parsed.is_family || row.email.is_some() {
+        // If family, has email, or is a signup (VIP/TRUE), upsert family
+        let is_signup = match row.signup.as_deref() {
+            Some("VIP") | Some("TRUE") => true,
+            _ => false,
+        };
+
+        let family_id = if parsed.is_family || row.email.is_some() || is_signup {
             let family_id = format!(
                 "family:{}",
                 parsed.skaters[0].last_name.to_lowercase().replace(" ", "_")
@@ -116,7 +121,7 @@ pub async fn import_roster(db: &Surreal<Client>, competition: &str, file_path: &
                 .query(
                     "INSERT INTO skater (id, first_name, last_name, created_at)
                      VALUES ($id, $first, $last, time::now())
-                     ON DUPLICATE KEY UPDATE first_name = $first, last_name = $last",
+                     ON DUPLICATE KEY UPDATE first_name = $first, last_name = $last, created_at = (created_at ?? time::now())",
                 )
                 .bind(("id", skater_id.clone()))
                 .bind(("first", skater.first_name.clone()))
@@ -347,7 +352,7 @@ pub async fn check_status(
                 ty_sent,
                 ty_sent_date
                 FROM family_competition
-                WHERE out.name CONTAINS $comp"#,
+                WHERE string::lowercase(out.name) CONTAINS $comp"#,
     );
     if pending_only {
         sql.push_str(" AND gallery_status = 'pending'");

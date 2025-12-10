@@ -48,6 +48,7 @@ This is the local context kernel for the `photography-mind` repository. It inher
 - **Risk:** Sibling Disambiguation.
     - *Issue:* Logic uses `parsed.skaters[0].last_name` to generate Family ID.
     - *Watch:* Siblings with different last names (e.g., "Yang" vs "He") may split the family. Needs future refactoring.
+    - *Policy:* Single skaters with `SignUp=TRUE` or `VIP` are now auto-promoted to `Family` entities to ensure delivery tracking.
 
 ---
 
@@ -66,3 +67,8 @@ This is the local context kernel for the `photography-mind` repository. It inher
 - **Fix:** Refactored `commands.rs` to use `UPDATE` instead of `DELETE`/`RELATE`.
 - **Expansion:** Added `shoot` / `family_shoot` schema for non-competition work.
 - **Server:** Fully implemented `photography_mcp` with `router.rs`.
+- **Recovery:** Restored "Fall Fling" data.
+    - Fixed parsing for single-word team names.
+    - Fixed `skater` upsert to handle missing `created_at` in legacy data.
+    - Deduplicated `competition` records (`2025_fall_fling` vs `fall_fling_2025`).
+    - Implemented logic to auto-create families for single skaters who requested photos (`SignUp=TRUE`).

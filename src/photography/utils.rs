@@ -45,6 +45,20 @@ pub fn parse_skater_names(name: &str) -> anyhow::Result<super::models::ParsedNam
         return Err(anyhow::anyhow!("Empty skater name"));
     }
 
+    // Handle single word case (e.g. Team Name like "GriffonGliders")
+    if words.len() == 1 {
+        let skater = super::models::ParsedSkater {
+            first_name: "Team".to_string(),
+            last_name: name.to_string(),
+            _family_email: None,
+        };
+        return Ok(super::models::ParsedName {
+            skaters: vec![skater],
+            is_family: false,
+            _is_synchro: true, 
+        });
+    }
+
     // Last word is last_name
     let last_name = words.last().unwrap().to_string();
 
