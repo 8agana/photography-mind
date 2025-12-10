@@ -50,7 +50,9 @@ impl ServerHandler for Router {
         _context: RequestContext<rmcp::service::RoleServer>,
     ) -> std::result::Result<ListToolsResult, McpError> {
         // Helper to create schema Arc from JSON
-        fn schema(json: serde_json::Value) -> std::sync::Arc<serde_json::Map<String, serde_json::Value>> {
+        fn schema(
+            json: serde_json::Value,
+        ) -> std::sync::Arc<serde_json::Map<String, serde_json::Value>> {
             std::sync::Arc::new(json.as_object().cloned().unwrap_or_default())
         }
 
@@ -576,24 +578,26 @@ impl ServerHandler for Router {
                     message: e.to_string().into(),
                     data: None,
                 }),
-            "link_family_shoot" => self
-                .0
-                .handle_link_family_shoot(request)
-                .await
-                .map_err(|e| McpError {
-                    code: rmcp::model::ErrorCode::INTERNAL_ERROR,
-                    message: e.to_string().into(),
-                    data: None,
-                }),
-            "record_purchase" => self
-                .0
-                .handle_record_purchase(request)
-                .await
-                .map_err(|e| McpError {
-                    code: rmcp::model::ErrorCode::INTERNAL_ERROR,
-                    message: e.to_string().into(),
-                    data: None,
-                }),
+            "link_family_shoot" => {
+                self.0
+                    .handle_link_family_shoot(request)
+                    .await
+                    .map_err(|e| McpError {
+                        code: rmcp::model::ErrorCode::INTERNAL_ERROR,
+                        message: e.to_string().into(),
+                        data: None,
+                    })
+            }
+            "record_purchase" => {
+                self.0
+                    .handle_record_purchase(request)
+                    .await
+                    .map_err(|e| McpError {
+                        code: rmcp::model::ErrorCode::INTERNAL_ERROR,
+                        message: e.to_string().into(),
+                        data: None,
+                    })
+            }
             "list_pending_shoot_galleries" => self
                 .0
                 .handle_list_pending_shoot_galleries(request)

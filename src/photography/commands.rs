@@ -209,7 +209,7 @@ pub async fn mark_sent(db: &Surreal<Client>, last_name: &str, comp: &str) -> Res
         .bind(("family_id", family_id_only.clone()))
         .bind(("competition_id", competition_id_only.clone()))
         .await?;
-    
+
     // Check if anything was updated
     let updated: Vec<Value> = update_resp.take(0)?;
     if updated.is_empty() {

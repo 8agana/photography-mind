@@ -41,6 +41,8 @@ impl PhotoMindServer {
             ("competition", "competition"),
             ("event", "event"),
             ("family_competition", "family_competition"),
+            ("shoot", "shoot"),
+            ("family_shoot", "family_shoot"),
         ];
 
         let mut counts = serde_json::Map::new();
@@ -161,7 +163,9 @@ impl PhotoMindServer {
         }
 
         let family = &families[0];
-        let display_name = family.last_name.clone()
+        let display_name = family
+            .last_name
+            .clone()
             .or_else(|| family.name.clone())
             .unwrap_or_else(|| last_name.clone());
 
@@ -265,6 +269,35 @@ impl PhotoMindServer {
             })));
         }
 
+        // Check if edge exists first
+        let check_query = r#"
+            SELECT id FROM family_competition
+            WHERE in = $family_id AND out = $comp_id
+            LIMIT 1
+        "#;
+        let mut check_result = self
+            .db
+            .query(check_query)
+            .bind(("family_id", family_ids[0].clone()))
+            .bind(("comp_id", comp_ids[0].clone()))
+            .await?;
+
+        #[derive(serde::Deserialize)]
+        struct EdgeCheck {
+            #[allow(dead_code)]
+            id: surrealdb::sql::Thing,
+        }
+        let edges: Vec<EdgeCheck> = check_result.take(0)?;
+
+        if edges.is_empty() {
+            return Ok(CallToolResult::structured(serde_json::json!({
+                "success": false,
+                "message": format!("No family_competition edge exists for {} at {}. Family may not be linked to this competition.", last_name, competition_name),
+                "family_id": family_ids[0].to_string(),
+                "competition_id": comp_ids[0].to_string(),
+            })));
+        }
+
         // Update family_competition edge
         let update_query = r#"
             UPDATE family_competition
@@ -313,14 +346,8 @@ impl PhotoMindServer {
             .bind(("comp", competition_name.clone()))
             .await?;
 
-        #[derive(serde::Deserialize, serde::Serialize)]
-        struct PendingFamily {
-            family: Option<String>,
-            email: Option<String>,
-            gallery_status: Option<String>,
-        }
-
-        let families: Vec<PendingFamily> = result.take(0).unwrap_or_default();
+        let families: Vec<crate::photography::models::PendingFamily> =
+            result.take(0).unwrap_or_default();
 
         Ok(CallToolResult::structured(serde_json::json!({
             "competition": competition_name,
@@ -412,11 +439,11 @@ impl PhotoMindServer {
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
 
-        // Optional shoot_date parameter (format: YYYY-MM-DD or YYYYMMDD)
+        // Optional date parameter (format: YYYY-MM-DD or YYYYMMDD)
         let shoot_date = req
             .arguments
             .as_ref()
-            .and_then(|args| args.get("shoot_date"))
+            .and_then(|args| args.get("date"))
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
 
@@ -524,6 +551,35 @@ impl PhotoMindServer {
             })));
         }
 
+        // Check if edge exists first
+        let check_query = r#"
+            SELECT id FROM family_shoot
+            WHERE in = $family_id AND out = $shoot_id
+            LIMIT 1
+        "#;
+        let mut check_result = self
+            .db
+            .query(check_query)
+            .bind(("family_id", family_ids[0].clone()))
+            .bind(("shoot_id", shoot_ids[0].clone()))
+            .await?;
+
+        #[derive(serde::Deserialize)]
+        struct EdgeCheck {
+            #[allow(dead_code)]
+            id: surrealdb::sql::Thing,
+        }
+        let edges: Vec<EdgeCheck> = check_result.take(0)?;
+
+        if edges.is_empty() {
+            return Ok(CallToolResult::structured(serde_json::json!({
+                "success": false,
+                "message": format!("No family_shoot edge exists for {} at {}. Family may not be linked to this shoot.", last_name, shoot_name),
+                "family_id": family_ids[0].to_string(),
+                "shoot_id": shoot_ids[0].to_string(),
+            })));
+        }
+
         // Update family_shoot edge
         let update_query = r#"
             UPDATE family_shoot
@@ -540,6 +596,8 @@ impl PhotoMindServer {
         Ok(CallToolResult::structured(serde_json::json!({
             "success": true,
             "message": format!("Marked shoot gallery as sent for {} at {}", last_name, shoot_name),
+            "family_id": family_ids[0].to_string(),
+            "shoot_id": shoot_ids[0].to_string(),
         })))
     }
 
@@ -596,14 +654,8 @@ impl PhotoMindServer {
             .bind(("shoot", shoot_name.clone()))
             .await?;
 
-        #[derive(serde::Deserialize, serde::Serialize)]
-        struct PendingFamily {
-            family: Option<String>,
-            email: Option<String>,
-            gallery_status: Option<String>,
-        }
-
-        let families: Vec<PendingFamily> = result.take(0).unwrap_or_default();
+        let families: Vec<crate::photography::models::PendingFamily> =
+            result.take(0).unwrap_or_default();
 
         Ok(CallToolResult::structured(serde_json::json!({
             "shoot": shoot_name,
@@ -792,7 +844,9 @@ impl PhotoMindServer {
         let family_list: Vec<_> = families
             .iter()
             .map(|f| {
-                let display_name = f.last_name.clone()
+                let display_name = f
+                    .last_name
+                    .clone()
                     .or_else(|| f.name.clone())
                     .unwrap_or_else(|| "Unknown".to_string());
                 serde_json::json!({
@@ -823,10 +877,10 @@ impl PhotoMindServer {
         let email = req
             .arguments
             .as_ref()
-            .and_then(|args| args.get("email"))
+            .and_then(|args| args.get("delivery_email"))
             .and_then(|v| v.as_str())
             .map(|s| s.to_string())
-            .ok_or_else(|| anyhow::anyhow!("Missing required parameter: email"))?;
+            .ok_or_else(|| anyhow::anyhow!("Missing required parameter: delivery_email"))?;
 
         let notes = req
             .arguments
@@ -869,7 +923,10 @@ impl PhotoMindServer {
     }
 
     /// Link a family to a shoot (creates family_shoot edge)
-    pub async fn handle_link_family_shoot(&self, req: CallToolRequestParam) -> Result<CallToolResult> {
+    pub async fn handle_link_family_shoot(
+        &self,
+        req: CallToolRequestParam,
+    ) -> Result<CallToolResult> {
         let last_name = req
             .arguments
             .as_ref()
@@ -919,10 +976,39 @@ impl PhotoMindServer {
             })));
         }
 
+        // Check if edge already exists
+        let check_query = r#"
+            SELECT id FROM family_shoot
+            WHERE in = $family_id AND out = $shoot_id
+            LIMIT 1
+        "#;
+        let mut check_result = self
+            .db
+            .query(check_query)
+            .bind(("family_id", family_ids[0].clone()))
+            .bind(("shoot_id", shoot_ids[0].clone()))
+            .await?;
+
+        #[derive(serde::Deserialize)]
+        struct EdgeCheck {
+            id: surrealdb::sql::Thing,
+        }
+        let existing: Vec<EdgeCheck> = check_result.take(0)?;
+
+        if !existing.is_empty() {
+            return Ok(CallToolResult::structured(serde_json::json!({
+                "success": false,
+                "message": format!("{} is already linked to shoot {}", last_name, shoot_name),
+                "family_id": family_ids[0].to_string(),
+                "shoot_id": shoot_ids[0].to_string(),
+                "existing_edge_id": existing[0].id.to_string(),
+            })));
+        }
+
         // Create family_shoot edge using RELATE
         let relate_query = r#"
             RELATE $family_id->family_shoot->$shoot_id
-            SET gallery_status = 'pending'
+            SET gallery_status = 'pending', created_at = time::now()
         "#;
 
         self.db
@@ -940,7 +1026,10 @@ impl PhotoMindServer {
     }
 
     /// Record a purchase for a family at a shoot
-    pub async fn handle_record_purchase(&self, req: CallToolRequestParam) -> Result<CallToolResult> {
+    pub async fn handle_record_purchase(
+        &self,
+        req: CallToolRequestParam,
+    ) -> Result<CallToolResult> {
         let last_name = req
             .arguments
             .as_ref()
@@ -1056,7 +1145,9 @@ impl PhotoMindServer {
         }
 
         let family = &families[0];
-        let display_name = family.last_name.clone()
+        let display_name = family
+            .last_name
+            .clone()
             .or_else(|| family.name.clone())
             .unwrap_or_else(|| last_name.clone());
 
@@ -1069,7 +1160,10 @@ impl PhotoMindServer {
     }
 
     /// Sync ShootProof galleries - match gallery names to family records
-    pub async fn handle_sync_shootproof_galleries(&self, req: CallToolRequestParam) -> Result<CallToolResult> {
+    pub async fn handle_sync_shootproof_galleries(
+        &self,
+        req: CallToolRequestParam,
+    ) -> Result<CallToolResult> {
         let json_path = req
             .arguments
             .as_ref()
@@ -1086,13 +1180,15 @@ impl PhotoMindServer {
             .unwrap_or(false);
 
         // Read the JSON file
-        let content = std::fs::read_to_string(&json_path)
+        let content = tokio::fs::read_to_string(&json_path)
+            .await
             .map_err(|e| anyhow::anyhow!("Failed to read file {}: {}", json_path, e))?;
 
         let data: serde_json::Value = serde_json::from_str(&content)
             .map_err(|e| anyhow::anyhow!("Failed to parse JSON: {}", e))?;
 
-        let galleries = data["galleries"].as_array()
+        let galleries = data["galleries"]
+            .as_array()
             .ok_or_else(|| anyhow::anyhow!("Expected 'galleries' array in JSON"))?;
 
         let mut matched = Vec::new();
@@ -1105,12 +1201,18 @@ impl PhotoMindServer {
             let url = gallery["url"].as_str().unwrap_or("").to_string();
 
             // Extract last name from gallery name (e.g., "Addie Knox" -> "knox", "Clements" -> "clements")
-            let last_name = name.split_whitespace().last().unwrap_or(&name).to_lowercase();
+            let last_name = name
+                .split_whitespace()
+                .last()
+                .unwrap_or(&name)
+                .to_lowercase();
             let family_id_str = format!("family:{}", last_name.replace(' ', "_"));
 
             // Check if family exists
-            let family_query = "SELECT id, name, shootproof_gallery_id FROM type::thing($family_id);";
-            let mut result = self.db
+            let family_query =
+                "SELECT id, name, shootproof_gallery_id FROM type::thing($family_id);";
+            let mut result = self
+                .db
                 .query(family_query)
                 .bind(("family_id", family_id_str.clone()))
                 .await?;
@@ -1167,7 +1269,10 @@ impl PhotoMindServer {
     }
 
     /// Sync ShootProof orders - update emails and record purchases
-    pub async fn handle_sync_shootproof_orders(&self, req: CallToolRequestParam) -> Result<CallToolResult> {
+    pub async fn handle_sync_shootproof_orders(
+        &self,
+        req: CallToolRequestParam,
+    ) -> Result<CallToolResult> {
         let json_path = req
             .arguments
             .as_ref()
@@ -1184,13 +1289,15 @@ impl PhotoMindServer {
             .unwrap_or(false);
 
         // Read the JSON file
-        let content = std::fs::read_to_string(&json_path)
+        let content = tokio::fs::read_to_string(&json_path)
+            .await
             .map_err(|e| anyhow::anyhow!("Failed to read file {}: {}", json_path, e))?;
 
         let data: serde_json::Value = serde_json::from_str(&content)
             .map_err(|e| anyhow::anyhow!("Failed to parse JSON: {}", e))?;
 
-        let orders = data["orders"].as_array()
+        let orders = data["orders"]
+            .as_array()
             .ok_or_else(|| anyhow::anyhow!("Expected 'orders' array in JSON"))?;
 
         let mut emails_updated = 0;
@@ -1205,12 +1312,17 @@ impl PhotoMindServer {
             let event_id = order["event_id"].as_i64().unwrap_or(0);
 
             // Extract last name from event name (gallery name = family name usually)
-            let last_name = event_name.split_whitespace().last().unwrap_or(&event_name).to_lowercase();
+            let last_name = event_name
+                .split_whitespace()
+                .last()
+                .unwrap_or(&event_name)
+                .to_lowercase();
             let family_id_str = format!("family:{}", last_name.replace(' ', "_"));
 
             // Check if family exists
             let family_query = "SELECT id, name, delivery_email FROM type::thing($family_id);";
-            let mut result = self.db
+            let mut result = self
+                .db
                 .query(family_query)
                 .bind(("family_id", family_id_str.clone()))
                 .await?;
@@ -1242,7 +1354,8 @@ impl PhotoMindServer {
 
                 if !dry_run && needs_email {
                     // Update family with email from order
-                    let update_query = "UPDATE type::thing($family_id) SET delivery_email = $email;";
+                    let update_query =
+                        "UPDATE type::thing($family_id) SET delivery_email = $email;";
                     self.db
                         .query(update_query)
                         .bind(("family_id", family_id_str))

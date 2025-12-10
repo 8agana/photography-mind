@@ -98,3 +98,11 @@ pub struct ParsedName {
     pub is_family: bool,
     pub _is_synchro: bool,
 }
+
+/// Family with pending gallery status (used in list_pending queries)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PendingFamily {
+    pub family: Option<String>,
+    pub email: Option<String>,
+    pub gallery_status: Option<String>,
+}
