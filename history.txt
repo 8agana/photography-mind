@@ -1,2 +1,8 @@
 #V2
 SELECT count() FROM family GROUP ALL;
+SELECT * FROM competition
+SELECT competition, count() FROM event GROUP BY competition
+DELETE event WHERE competition = competition:fall_fling_2025; DELETE competition:fall_fling_2025;
+SELECT count() FROM family; SELECT count() FROM family_competition; SELECT out, count() FROM family_competition GROUP BY out;
+UPDATE family_competition SET gallery_status = 'sent', sent_date = d'2025-11-01T12:00:00Z' WHERE out = competition:2025_fall_fling;
+UPDATE competed_in SET gallery_status = 'sent', gallery_sent_at = d'2025-11-01T12:00:00Z' WHERE out.competition = competition:2025_fall_fling;

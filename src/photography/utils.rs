@@ -55,7 +55,7 @@ pub fn parse_skater_names(name: &str) -> anyhow::Result<super::models::ParsedNam
         return Ok(super::models::ParsedName {
             skaters: vec![skater],
             is_family: false,
-            _is_synchro: true, 
+            _is_synchro: true,
         });
     }
 
